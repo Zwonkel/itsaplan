@@ -284,6 +284,33 @@ tidy first so review sees the final shape; a review before tidy goes stale when
 tidy moves the code. This is separate from the CI gate (`format:check` + `lint` +
 `typecheck`), which still must pass.
 
+## The private edition (`edition` branch)
+
+`edition` carries the private edition on top of the community core; `main` mirrors
+upstream (`croffasia/itsaplan`). After upstream lands in `main`, merge `main` into
+`edition` and resolve from the `edition` side. Deploys build from `edition`.
+
+Keep the delta at the seams upstream maintains, so merges stay trivial:
+
+- The api's edition settings are installed at startup by `apps/api/src/edition.ts`,
+  imported by `src/index.ts` before the port binds: `setOwnedWorkspaceLimit(0)`
+  (`shared/limits.ts`) and `setWorkspaceScim()` (`@repo/auth`). Never edit what a setter
+  wraps — the limits defaults, the guards, the schedule extension, the auth flag. Call
+  the setter from `edition.ts`; a route an edition adds, such as `POST /workspaces`,
+  chains on the module's own router where upstream comments name the seam.
+- The web edition parts live in `apps/web/src/ce/` behind the `@/cloud` alias (see
+  `apps/web/AGENTS.md`). An edit inside a core file stays a deletion or a mount of what
+  already exists — no restructures.
+- An upstream merge that brings new Cloud/Pro upsells in is resolved by removing them
+  again in `edition`, at the same seams: the `ce/` stub, or the smallest direct edit.
+- A test never sees the edition (tests import `app.ts`, not `index.ts`). One that needs
+  the owned-workspace limit calls `setOwnedWorkspaceLimit` itself and restores the
+  default in an `afterEach`.
+- A Pro feature the core does not carry — workspace dashboard, audit log, issue-event
+  schedules, analytics extras, AI budgets, SAML and per-workspace SSO — has no switch
+  here. Build it through the extension hooks (`apps/api/AGENTS.md` → Extension hooks)
+  when it is wanted, or skip it; there is no env var for it.
+
 ## Gotchas
 
 - Don't add a build step for shared packages — they're consumed as source. The one
