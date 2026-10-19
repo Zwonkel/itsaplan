@@ -12,7 +12,7 @@ import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
 import { Pill } from '@/components/common/fields/Pill';
 import ReadOnlyPill from '@/components/common/fields/ReadOnlyPill';
-import DelegateSelect from '../fields/DelegateSelect';
+import DelegateSelect from '@/components/common/fields/DelegateSelect';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';
 import StatusSelect from '@/components/common/fields/StatusSelect';

@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "پاک شد",
     "noAssignee": "بدون مسئول",
+    "noDelegate": "بدون واگذارشده",
     "noType": "بدون نوع",
     "noLabels": "هیچ‌کدام"
   }

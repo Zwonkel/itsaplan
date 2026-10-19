@@ -2,9 +2,9 @@ import { CircleDashed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import Avatar from '@/components/common/Avatar';
-import { Pill } from '@/components/common/fields/Pill';
-import PopoverPick from '@/components/common/fields/PopoverPick';
-import { useCandidatePickItem } from '../../hooks/useCandidatePickItem';
+import { Pill } from './Pill';
+import PopoverPick from './PopoverPick';
+import { useCandidatePickItem } from '@/hooks/useCandidatePickItem';
 
 // The agent an issue is delegated to. `assignees` is the project's full candidate
 // list; this control filters it to agents. Members are set through AssigneeSelect.

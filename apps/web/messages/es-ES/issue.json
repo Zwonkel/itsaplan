@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "Vacío",
     "noAssignee": "Sin asignar",
+    "noDelegate": "Sin delegado",
     "noType": "Sin tipo",
     "noLabels": "Ninguna"
   }

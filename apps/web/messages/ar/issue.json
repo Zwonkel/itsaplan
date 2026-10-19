@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "تم المسح",
     "noAssignee": "بلا مسؤول",
+    "noDelegate": "بلا مفوَّض",
     "noType": "بلا نوع",
     "noLabels": "لا شيء"
   }

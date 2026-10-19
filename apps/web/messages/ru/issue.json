@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "Очищено",
     "noAssignee": "Без исполнителя",
+    "noDelegate": "Без делегата",
     "noType": "Без типа",
     "noLabels": "Нет"
   }

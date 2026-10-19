@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "已清除",
     "noAssignee": "无负责人",
+    "noDelegate": "无执行代理",
     "noType": "无类型",
     "noLabels": "无标签"
   }

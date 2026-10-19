@@ -6,7 +6,7 @@ import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';
 import PopoverPick from '@/components/common/fields/PopoverPick';
 import { memberCandidates } from '@/utils/memberFields';
-import { useCandidatePickItem } from '../../hooks/useCandidatePickItem';
+import { useCandidatePickItem } from '@/hooks/useCandidatePickItem';
 
 // The candidates the field's scope offers, listed with the people before the agents.
 function candidates(assignees: Assignee[], scope: MemberScope): Assignee[] {

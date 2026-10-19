@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "지워짐",
     "noAssignee": "담당자 없음",
+    "noDelegate": "위임 대상 없음",
     "noType": "유형 없음",
     "noLabels": "없음"
   }

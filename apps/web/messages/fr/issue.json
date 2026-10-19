@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "Effacé",
     "noAssignee": "Aucun responsable",
+    "noDelegate": "Aucun délégué",
     "noType": "Aucun type",
     "noLabels": "Aucune"
   }

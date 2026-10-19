@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "Cleared",
     "noAssignee": "No assignee",
+    "noDelegate": "No delegate",
     "noType": "No type",
     "noLabels": "None"
   }

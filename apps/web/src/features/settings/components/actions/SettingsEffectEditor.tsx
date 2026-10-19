@@ -7,6 +7,7 @@ import { EFFECT_FIELD_KEYS, effectFieldKeys, type EffectFieldKey } from '@/utils
 import { useEffectText } from '@/hooks/useEffectText';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
+import DelegateSelect from '@/components/common/fields/DelegateSelect';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';
 import StatusSelect from '@/components/common/fields/StatusSelect';
@@ -58,6 +59,14 @@ function EffectValue({
         <AssigneeSelect
           assignees={project.assignees}
           value={effect.assigneeUserId ?? null}
+          onChange={onChange}
+        />
+      );
+    case 'delegateUserId':
+      return (
+        <DelegateSelect
+          assignees={project.assignees}
+          value={effect.delegateUserId ?? null}
           onChange={onChange}
         />
       );

@@ -472,6 +472,7 @@
   "effects": {
     "cleared": "Dikosongkan",
     "noAssignee": "Tanpa penerima tugas",
+    "noDelegate": "Tanpa delegasi",
     "noType": "Tanpa tipe",
     "noLabels": "Tidak ada"
   }

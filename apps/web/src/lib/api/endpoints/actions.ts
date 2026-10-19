@@ -9,7 +9,14 @@ import type { IssuePatch } from '@/lib/api/endpoints/issues';
 // absent key leaves it unchanged.
 export type ActionEffect = Pick<
   IssuePatch,
-  'columnId' | 'assigneeUserId' | 'priority' | 'typeId' | 'startDate' | 'dueDate' | 'labelIds'
+  | 'columnId'
+  | 'assigneeUserId'
+  | 'delegateUserId'
+  | 'priority'
+  | 'typeId'
+  | 'startDate'
+  | 'dueDate'
+  | 'labelIds'
 >;
 
 export interface ActionDef {

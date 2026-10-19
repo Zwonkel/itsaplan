@@ -10,6 +10,7 @@ export interface EffectText {
   field: (key: EffectFieldKey) => string;
   cleared: string;
   noAssignee: string;
+  noDelegate: string;
   noType: string;
   noLabels: string;
   priority: (value: string | null) => string;
@@ -18,6 +19,7 @@ export interface EffectText {
 const FIELD_MESSAGES = {
   columnId: 'state',
   assigneeUserId: 'assignee',
+  delegateUserId: 'delegate',
   priority: 'priority',
   typeId: 'type',
   startDate: 'startDate',
@@ -34,6 +36,7 @@ export function useEffectText(): EffectText {
     field: (key) => tFields(FIELD_MESSAGES[key]),
     cleared: t('cleared'),
     noAssignee: t('noAssignee'),
+    noDelegate: t('noDelegate'),
     noType: t('noType'),
     noLabels: t('noLabels'),
     priority,
