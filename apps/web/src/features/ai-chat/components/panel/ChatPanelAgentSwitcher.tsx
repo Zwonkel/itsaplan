@@ -12,12 +12,14 @@ import { AiChatAgentMenu } from '../shared/AiChatAgentMenu';
 export function ChatPanelAgentSwitcher({
   agents,
   selected,
+  chatDefaultId,
   providerLabel,
   disabled,
   onSelect,
 }: {
   agents: AiAgent[];
   selected: AiAgent;
+  chatDefaultId: number | null;
   providerLabel: (key: string) => string;
   disabled: boolean;
   onSelect: (agentId: number) => void;
@@ -42,6 +44,7 @@ export function ChatPanelAgentSwitcher({
       <AiChatAgentMenu
         agents={agents}
         selectedId={selected.id}
+        chatDefaultId={chatDefaultId}
         providerLabel={providerLabel}
         onSelect={onSelect}
       />

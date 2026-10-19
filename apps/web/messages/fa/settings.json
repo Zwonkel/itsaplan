@@ -139,7 +139,14 @@
       "documents": "مستندات مشترک پروژه که در قالب صفحه‌ها سازمان‌دهی شده‌اند."
     },
     "featureOn": "{feature} روشن شد",
-    "featureOff": "{feature} خاموش شد"
+    "featureOff": "{feature} خاموش شد",
+    "chat": "Chat",
+    "chatHint": "What members start a chat with.",
+    "chatAgent": "Default chat agent",
+    "chatAgentHint": "Preselected when a chat opens, unless the member chats with another agent first.",
+    "chatAgentInherit": "Team default",
+    "chatAgentNone": "Nothing set",
+    "chatAgentSaved": "Default chat agent saved"
   },
   "configuration": {
     "saved": "تغییرات ذخیره شد",

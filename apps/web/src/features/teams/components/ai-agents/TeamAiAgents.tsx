@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
-import { useAiAgentsQuery, useDeleteAiAgent } from '@/services/aiAgents.service';
+import { useAiAgentsQuery, useDeleteAiAgent, useUpdateAiAgent } from '@/services/aiAgents.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
@@ -10,10 +10,11 @@ import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import ListPager from '@/components/common/ListPager';
 import { usePaging } from '@/hooks/usePaging';
-import { useAgentSection } from '../../context/agentSection';
+import { useAgentSection, useAgentCan } from '../../context/agentSection';
 import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
+import TeamChatDefault from './TeamChatDefault';
 import { integrationLabel } from '@/utils/integrationLabels';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
@@ -40,6 +41,8 @@ export default function TeamAiAgents() {
   const defaultIds = defaults?.defaultAgentIds ?? [];
   const canEditDefaults = team != null && team.role !== 'member';
   const deleteAgent = useDeleteAiAgent(teamId);
+  const updateAgent = useUpdateAiAgent(teamId);
+  const canEditAgent = useAgentCan()('edit');
   // The integration catalog maps a provider key to a readable label for the meta row.
   const catalog = useIntegrationCatalogQuery(teamId).data ?? [];
 
@@ -64,13 +67,15 @@ export default function TeamAiAgents() {
         <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
+          <TeamChatDefault agents={agents} />
           <Table className="min-w-[1000px] table-fixed">
             <colgroup>
-              <col className="w-[32%]" />
-              <col className="w-[18%]" />
-              <col className="w-[32%]" />
+              <col className="w-[28%]" />
+              <col className="w-[16%]" />
+              <col className="w-[26%]" />
               <col className="w-[10%]" />
-              <col className="w-[8%]" />
+              <col className="w-[10%]" />
+              <col className="w-[10%]" />
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -90,6 +95,16 @@ export default function TeamAiAgents() {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       {t(canEditDefaults ? 'projectDefaultsHint' : 'projectDefaultsReadOnly')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TableHead>
+                <TableHead className="text-end text-xs font-medium text-muted-foreground">
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-4">
+                      {t('chatColumn')}
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {t(canEditAgent ? 'chatColumnHint' : 'chatColumnReadOnly')}
                     </TooltipContent>
                   </Tooltip>
                 </TableHead>
@@ -117,6 +132,13 @@ export default function TeamAiAgents() {
                             on ? [...defaultIds, a.id] : defaultIds.filter((id) => id !== a.id),
                             { onSuccess: () => toast.success(t('projectDefaultsSaved')) },
                           )
+                      : undefined
+                  }
+                  chatEnabled={a.chatEnabled}
+                  chatPending={updateAgent.isPending}
+                  onChatEnabledChange={
+                    canEditAgent
+                      ? (on) => updateAgent.mutate({ id: a.id, patch: { chatEnabled: on } })
                       : undefined
                   }
                 />

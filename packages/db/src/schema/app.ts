@@ -113,6 +113,11 @@ export const team = pgTable(
     // project it owns, whatever each project's own flag says.
     mcpEnabled: boolean('mcp_enabled').notNull().default(true),
     defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
+    // The agent new chats default to, for every project that sets none of its own.
+    // No foreign key on purpose, like default_agent_ids: the write routes check the
+    // agent, and deleting or un-chatting it clears the references (see the agents
+    // module). An id left behind resolves to nothing.
+    defaultChatAgentId: integer('default_chat_agent_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('team_workspace_idx').on(t.workspaceId)],
@@ -191,6 +196,11 @@ export const project = pgTable(
     // When set, the project is archived: read-only, left out of the members' project
     // lists, and its agent schedules do not run. Its rows are kept and it can be restored.
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    // The agent a new chat in this project starts with, read from the team's default
+    // while null. No foreign key on purpose (see team.default_chat_agent_id): the
+    // write route checks the agent, and the agents module clears the reference when
+    // the agent is deleted, detached from projects or taken out of chat.
+    defaultChatAgentId: integer('default_chat_agent_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],
@@ -539,6 +549,9 @@ export const aiAgent = pgTable(
     // trigger_on_assign is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    // Whether the agent is offered in the chat panel and may be a project's or the
+    // team's default chat agent. Every agent is offered until a manager turns it off.
+    chatEnabled: boolean('chat_enabled').notNull().default(true),
     // How long a delegation run waits before it becomes claimable, which leaves time
     // to keep editing the issue after delegating it. Applies to delegation only: a
     // mention is a question already asked, and its author waits for the reply.
@@ -855,6 +868,24 @@ export const agentChatFavorite = pgTable(
     threadId: text('thread_id').notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.threadId] })],
+);
+
+// The agent of each member's last chat in a project, so opening chat again preselects
+// it. One row per (member, project); the FK nulls the reference when the agent is
+// deleted, and a read drops one whose agent no longer serves chat.
+export const agentChatLastAgent = pgTable(
+  'agent_chat_last_agent',
+  {
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    agentId: integer('agent_id').references(() => aiAgent.id, { onDelete: 'set null' }),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.userId] })],
 );
 
 // Stored credentials for a team's integrations, shared by every project it owns. One

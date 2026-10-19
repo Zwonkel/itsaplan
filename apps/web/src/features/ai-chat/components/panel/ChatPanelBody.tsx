@@ -1,11 +1,11 @@
 'use client';
 
-import { memo, useEffect } from 'react';
-import { useProjectAgents } from '@/hooks/useProjectAgents';
+import { memo, useEffect, useMemo } from 'react';
 import { AiChatThreadSkeleton } from '../shared/AiChatThreadSkeleton';
 import { ChatPanelEmpty } from './ChatPanelEmpty';
 import { ChatPanelSession } from './ChatPanelSession';
 import { ChatPanelTabs } from './ChatPanelTabs';
+import { useChatAgents } from '../../hooks/useChatAgents';
 import { useChatSessions, type ChatSession } from '../../hooks/useChatSessions';
 import { useProviderLabel } from '../../hooks/useProviderLabel';
 
@@ -21,9 +21,19 @@ export const ChatPanelBody = memo(function ChatPanelBody({
   newChatAgentId: number | null;
   onNewChatHandled: () => void;
 }) {
-  const agentsQuery = useProjectAgents();
-  const agents = agentsQuery.data ?? [];
+  const { agents, chatAgents, chatDefaultId, rememberedId, loading } = useChatAgents(projectKey);
   const providerLabel = useProviderLabel();
+
+  // The agent a fresh chat takes: the member's own last-used agent, the project's
+  // default chat agent, else the first agent chat offers — nothing until both reads
+  // have settled.
+  const freshChatAgentId = useMemo(() => {
+    if (loading) return null;
+    const picked = rememberedId ?? chatDefaultId;
+    if (picked != null && chatAgents.some((agent) => agent.id === picked)) return picked;
+    return chatAgents[0]?.id ?? null;
+  }, [loading, rememberedId, chatDefaultId, chatAgents]);
+
   const {
     sessions,
     active,
@@ -37,7 +47,7 @@ export const ChatPanelBody = memo(function ChatPanelBody({
     setThread,
     setAgent,
     setState,
-  } = useChatSessions(projectKey, agents[0]?.id ?? null);
+  } = useChatSessions(projectKey, freshChatAgentId);
 
   // A page asked for a chat with one agent: it opens as a tab of its own, so whatever
   // is already open stays.
@@ -61,7 +71,7 @@ export const ChatPanelBody = memo(function ChatPanelBody({
     if (session) closeSession(session.id);
   };
 
-  if (agentsQuery.isLoading) {
+  if (loading) {
     return (
       <div className="min-h-0 flex-1">
         <AiChatThreadSkeleton />
@@ -69,7 +79,9 @@ export const ChatPanelBody = memo(function ChatPanelBody({
     );
   }
 
-  if (agents.length === 0) {
+  // A conversation already open stays, whatever chat now offers; the empty state is
+  // for a chat that has nothing to open.
+  if (chatAgents.length === 0 && sessions.length === 0) {
     return (
       <div className="min-h-0 flex-1">
         <ChatPanelEmpty projectKey={projectKey} />
@@ -98,8 +110,9 @@ export const ChatPanelBody = memo(function ChatPanelBody({
             <ChatPanelSession
               key={session.id}
               projectKey={projectKey}
-              agents={agents}
+              agents={chatAgents}
               agent={agent}
+              chatDefaultId={chatDefaultId}
               session={session}
               active={session.id === active?.id}
               providerLabel={providerLabel}

@@ -53,6 +53,8 @@ export interface AiAgent {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Whether chat offers the agent (off by a manager turn-off; every agent starts on).
+  chatEnabled: boolean;
   // The member custom fields that start a run when the agent is set into one, each
   // with the seconds its run waits before the agent may pick it up.
   fieldTriggers: AgentFieldTriggerRead[];
@@ -141,6 +143,7 @@ export interface NewAiAgentInput {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  chatEnabled?: boolean;
 }
 
 export interface AiAgentPatch {
@@ -161,6 +164,7 @@ export interface AiAgentPatch {
   delegationDelaySec?: number;
   projectIds?: number[];
   runnerScope?: 'owner' | 'team';
+  chatEnabled?: boolean;
 }
 
 // One event of a streamed agent run (mirrors the API's AgentRunEvent). `text` is a

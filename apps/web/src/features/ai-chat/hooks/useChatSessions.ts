@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { uuid } from '@/utils/uuid';
+import { putLastUsedChatAgent } from '@/lib/api/endpoints/agentChat';
 
 // One open conversation in the chat panel. `threadId` is null until the agent answers
 // the first message, and stays null for an agent that keeps no memory. `running` and
@@ -194,6 +195,16 @@ export function useChatSessions(projectKey: string | null, defaultAgentId: numbe
   }, []);
 
   const active = sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null;
+
+  // Remember the agent of the chat the member is on, per project: opening the panel
+  // again preselects it. The loadedKey check keeps a project switch from recording an
+  // agent of the tabs that are on their way out. A silent preference write — a
+  // failure changes nothing on the screen.
+  const activeAgentId = active?.agentId ?? null;
+  useEffect(() => {
+    if (!projectKey || loadedKey !== projectKey || activeAgentId == null) return;
+    void putLastUsedChatAgent(projectKey, activeAgentId).catch(() => {});
+  }, [projectKey, loadedKey, activeAgentId]);
 
   return {
     sessions,

@@ -25,6 +25,7 @@
   "addFavorite": "즐겨찾기 추가",
   "removeFavorite": "즐겨찾기 제거",
   "noModel": "설정된 모델 없음",
+  "defaultBadge": "Default",
   "copySession": "세션 ID 복사",
   "sessionLabel": "로컬 세션 ID",
   "sessionHint": "AI 에이전트의 러너가 실행 중인 환경에 저장하는 세션입니다. 해당 환경에서 세션을 재개하면 도구 호출을 포함한 전체 대화 기록을 확인할 수 있습니다."

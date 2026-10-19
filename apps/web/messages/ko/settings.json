@@ -139,7 +139,14 @@
       "documents": "페이지로 구성된 프로젝트 문서를 공유합니다."
     },
     "featureOn": "{feature} 활성화됨",
-    "featureOff": "{feature} 비활성화됨"
+    "featureOff": "{feature} 비활성화됨",
+    "chat": "Chat",
+    "chatHint": "What members start a chat with.",
+    "chatAgent": "Default chat agent",
+    "chatAgentHint": "Preselected when a chat opens, unless the member chats with another agent first.",
+    "chatAgentInherit": "Team default",
+    "chatAgentNone": "Nothing set",
+    "chatAgentSaved": "Default chat agent saved"
   },
   "configuration": {
     "saved": "변경 사항이 저장되었습니다",

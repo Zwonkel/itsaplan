@@ -139,7 +139,14 @@
       "documents": "Shared project documentation organized into pages."
     },
     "featureOn": "{feature} turned on",
-    "featureOff": "{feature} turned off"
+    "featureOff": "{feature} turned off",
+    "chat": "Chat",
+    "chatHint": "What members start a chat with.",
+    "chatAgent": "Default chat agent",
+    "chatAgentHint": "Preselected when a chat opens, unless the member chats with another agent first.",
+    "chatAgentInherit": "Team default",
+    "chatAgentNone": "Nothing set",
+    "chatAgentSaved": "Default chat agent saved"
   },
   "configuration": {
     "saved": "Changes saved",

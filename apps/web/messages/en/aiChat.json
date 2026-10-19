@@ -25,6 +25,7 @@
   "addFavorite": "Add to favorites",
   "removeFavorite": "Remove from favorites",
   "noModel": "No model set",
+  "defaultBadge": "Default",
   "copySession": "Copy session id",
   "sessionLabel": "Local session id",
   "sessionHint": "The session the agent's runner keeps on its own machine. Resume it there to read the full transcript with its tool calls."

@@ -25,6 +25,7 @@
   "addFavorite": "Adicionar aos favoritos",
   "removeFavorite": "Remover dos favoritos",
   "noModel": "Nenhum modelo definido",
+  "defaultBadge": "Default",
   "copySession": "Copiar id da sessão",
   "sessionLabel": "Id local da sessão",
   "sessionHint": "A sessão que o runner do agente mantém na sua própria máquina. Retome-a lá para ler a transcrição completa com suas chamadas de ferramenta."
