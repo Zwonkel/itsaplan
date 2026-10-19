@@ -34,6 +34,9 @@ export function TeamAiAgentRow({
   joinsNewProjects,
   joinsNewProjectsPending,
   onJoinsNewProjectsChange,
+  chatEnabled,
+  chatPending,
+  onChatEnabledChange,
 }: {
   agent: AiAgent;
   providerLabel: (key: string) => string;
@@ -45,6 +48,10 @@ export function TeamAiAgentRow({
   joinsNewProjectsPending: boolean;
   // Undefined for a member who cannot change the team's defaults.
   onJoinsNewProjectsChange?: (on: boolean) => void;
+  chatEnabled: boolean;
+  chatPending: boolean;
+  // Undefined for a member who cannot edit the agent.
+  onChatEnabledChange?: (on: boolean) => void;
 }) {
   const t = useTranslations('teams.agents');
   const tCommon = useTranslations('common');
@@ -107,6 +114,20 @@ export function TeamAiAgentRow({
             aria-label={t('projectDefaultAria', { agent: agent.name })}
           />
         ) : joinsNewProjects ? (
+          <Check className="size-4 text-green-500" aria-label={t('projectDefaultOn')} />
+        ) : (
+          <Minus className="size-4 text-muted-foreground" aria-label={t('projectDefaultOff')} />
+        )}
+      </TableCell>
+      <TableCell className="px-3 py-3 align-middle" onClick={(e) => e.stopPropagation()}>
+        {onChatEnabledChange ? (
+          <Switch
+            checked={chatEnabled}
+            disabled={chatPending}
+            onCheckedChange={onChatEnabledChange}
+            aria-label={t('chatAria', { agent: agent.name })}
+          />
+        ) : chatEnabled ? (
           <Check className="size-4 text-green-500" aria-label={t('projectDefaultOn')} />
         ) : (
           <Minus className="size-4 text-muted-foreground" aria-label={t('projectDefaultOff')} />

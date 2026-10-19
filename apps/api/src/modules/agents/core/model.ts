@@ -77,6 +77,12 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  chatEnabled: t.Optional(
+    t.Boolean({
+      description:
+        'Offer the agent in the chat panel and let a project or the team make it the default chat agent.',
+    }),
+  ),
   fieldTriggers: t.Optional(
     t.Array(
       t.Object({
@@ -139,6 +145,7 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  chatEnabled: t.Boolean({ description: 'Offer the agent in the chat panel.' }),
   fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), name: t.String(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),
   ownerUserId: t.Nullable(t.String()),

@@ -25,6 +25,7 @@ export function ChatPanelSession({
   projectKey,
   agents,
   agent,
+  chatDefaultId,
   session,
   active,
   providerLabel,
@@ -37,6 +38,7 @@ export function ChatPanelSession({
   projectKey: string;
   agents: AiAgent[];
   agent: AiAgent;
+  chatDefaultId: number | null;
   session: ChatSession;
   active: boolean;
   providerLabel: (key: string) => string;
@@ -74,6 +76,7 @@ export function ChatPanelSession({
             <ChatPanelAgentSwitcher
               agents={agents}
               selected={agent}
+              chatDefaultId={chatDefaultId}
               providerLabel={providerLabel}
               disabled={session.running}
               onSelect={(agentId) => onSelectAgent(session, agentId)}

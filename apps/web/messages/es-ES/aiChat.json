@@ -25,6 +25,7 @@
   "addFavorite": "Añadir a favoritos",
   "removeFavorite": "Quitar de favoritos",
   "noModel": "No hay modelo definido",
+  "defaultBadge": "Default",
   "copySession": "Copiar el ID de sesión",
   "sessionLabel": "ID de sesión local",
   "sessionHint": "La sesión que el ejecutor del agente guarda en su propia máquina. Retómala allí para leer la transcripción completa con sus llamadas a herramientas."

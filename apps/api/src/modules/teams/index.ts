@@ -25,6 +25,7 @@ import {
   TeamDetailResponse,
   TeamListResponse,
   TeamMcpResponse,
+  TeamChatDefaultResponse,
   TeamProjectDefaultsResponse,
   TeamMemberPageResponse,
   TeamProjectDetailResponse,
@@ -40,6 +41,7 @@ import {
   teamProjectParams,
   memberListQuery,
   updateTeamBody,
+  updateTeamChatDefaultBody,
   updateTeamMcpBody,
   updateTeamProjectDefaultsBody,
 } from './model';
@@ -62,6 +64,7 @@ import {
   setTeamMemberRole,
   teamOwnsProject,
 } from './service';
+import { getTeamChatDefault, setTeamChatDefault } from '#modules/agents/chat/chat-settings';
 
 // The write routes act on a project the team owns; one of another team answers 404
 // rather than being changed through this team.
@@ -270,6 +273,33 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       body: updateTeamProjectDefaultsBody,
       response: { 200: TeamProjectDefaultsResponse, ...errors(400, 401, 403, 404) },
       detail: { summary: "Set the team's default agents for new projects" },
+    },
+  )
+
+  // The team's default chat agent, which every project that sets none of its own
+  // inherits. Members read it; the owner or a manager sets it.
+  .get('/teams/:teamId/chat-default', ({ membership }) => getTeamChatDefault(membership.teamId), {
+    teamMember: true,
+    params: teamParams,
+    response: { 200: TeamChatDefaultResponse, ...errors(401, 403, 404) },
+    detail: { summary: "Get the team's default chat agent" },
+  })
+
+  .patch(
+    '/teams/:teamId/chat-default',
+    ({ body, membership }) => setTeamChatDefault(membership.teamId, body.defaultAgentId),
+    {
+      teamManager: true,
+      params: teamParams,
+      body: updateTeamChatDefaultBody,
+      response: { 200: TeamChatDefaultResponse, ...errors(400, 401, 403, 404) },
+      detail: {
+        summary: "Set the team's default chat agent",
+        description:
+          'The agent new chats start with in every project that sets none of its own. It ' +
+          'must belong to the team, be enabled for chat, and serve every member: a ' +
+          'member-restricted agent cannot be a default.',
+      },
     },
   )
 

@@ -101,6 +101,8 @@ export interface AiAgentRow {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Whether the agent is offered in the chat panel and may hold a chat default.
+  chatEnabled: boolean;
   // The member custom fields the agent also reacts to: being set into one of them
   // starts a run the way being made an issue's delegate does. Each field carries its
   // own delay, so a field can start at once while another leaves time to edit.
@@ -148,6 +150,7 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  chatEnabled: boolean;
   fieldTriggers: FieldTriggerRead[];
   delegationDelaySec: number;
   ownerUserId: string | null;
@@ -179,6 +182,7 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    chatEnabled: row.chatEnabled,
     fieldTriggers: row.fieldTriggers,
     delegationDelaySec: row.delegationDelaySec,
     ownerUserId: row.ownerUserId,
@@ -216,6 +220,7 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  chatEnabled: aiAgent.chatEnabled,
   fieldTriggers: sql<
     FieldTriggerRead[]
   >`(select coalesce(json_agg(json_build_object('fieldId', ${agentFieldTrigger.fieldId}, 'name', ${customField.name}, 'delaySec', ${agentFieldTrigger.delaySec}) order by ${customField.name}), '[]'::json) from ${agentFieldTrigger} join ${customField} on ${customField.id} = ${agentFieldTrigger.fieldId} where ${agentFieldTrigger.agentId} = ${aiAgent.id})`,
@@ -249,7 +254,7 @@ function agentQuery() {
 
 // Whether the agent is a member of the project, as a condition on a query over
 // ai_agent. Membership is held by the bot user, so it is a project_member row of it.
-function inProject(projectId: number) {
+export function inProject(projectId: number) {
   return sql`exists (select 1 from ${projectMember} pm where pm.user_id = ${aiAgent.userId} and pm.project_id = ${projectId})`;
 }
 
@@ -532,6 +537,8 @@ export interface NewAgentInput {
   // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  // Whether chat offers the agent (default true).
+  chatEnabled?: boolean;
   // The member custom fields that start a run when the agent is set into one.
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
@@ -626,6 +633,7 @@ export async function createAgent(
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
           triggerOnMention: input.triggerOnMention ?? isInternal,
           triggerOnAssign: input.triggerOnAssign ?? false,
+          chatEnabled: input.chatEnabled ?? true,
           delegationDelaySec: input.delegationDelaySec,
           ownerUserId: input.ownerUserId ?? null,
           runnerScope: input.runnerScope ?? 'team',
@@ -658,6 +666,20 @@ export async function createAgent(
   return { agent, apiKey: isInternal ? null : apiKey };
 }
 
+// The chat defaults that name this agent — the team's and those of its projects —
+// have to go when it leaves chat (chat switched off, its runner restricted, deleted).
+// The reads re-validate besides this, so a stale id resolves to nothing anyway.
+export async function clearChatDefaults(teamId: number, agentId: number): Promise<void> {
+  await db
+    .update(team)
+    .set({ defaultChatAgentId: null })
+    .where(and(eq(team.id, teamId), eq(team.defaultChatAgentId, agentId)));
+  await db
+    .update(project)
+    .set({ defaultChatAgentId: null })
+    .where(and(eq(project.teamId, teamId), eq(project.defaultChatAgentId, agentId)));
+}
+
 // Replaces the projects the agent works in. Membership is what gives its key access,
 // so this is the whole of attaching and detaching: a project left out is detached, and
 // the runs, threads and issues it produced there are untouched. A project it already
@@ -683,6 +705,17 @@ async function setAgentProjects(agent: AiAgentRow, projectIds: number[]): Promis
         and(
           eq(projectColumn.autoAssignUserId, agent.userId),
           wanted.length > 0 ? notInArray(projectColumn.projectId, wanted) : undefined,
+        ),
+      );
+    // Nor keep being its default chat agent once it left the project.
+    await tx
+      .update(project)
+      .set({ defaultChatAgentId: null })
+      .where(
+        and(
+          eq(project.teamId, agent.teamId),
+          eq(project.defaultChatAgentId, agent.id),
+          wanted.length > 0 ? notInArray(project.id, wanted) : undefined,
         ),
       );
     if (wanted.length > 0) {
@@ -787,6 +820,7 @@ export interface AgentPatch {
   fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
   runnerScope?: RunnerScope;
+  chatEnabled?: boolean;
 }
 
 export async function updateAgent(
@@ -821,6 +855,7 @@ export async function updateAgent(
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
+  if (patch.chatEnabled !== undefined) set.chatEnabled = patch.chatEnabled;
   if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
   // The scope and its owner are one setting: 'owner' means the runs of the member who
   // chose it, so switching to it hands the agent to them.
@@ -848,6 +883,11 @@ export async function updateAgent(
   if (patch.fieldTriggers !== undefined) {
     await setFieldTriggers(id, projectIds, patch.fieldTriggers);
   }
+  // An agent taken out of chat, or handed to its owner, stops being one that a chat
+  // default may name; the settings that named it hand the choice back then.
+  if (patch.chatEnabled === false || patch.runnerScope === 'owner') {
+    await clearChatDefaults(teamId, id);
+  }
 
   return getAgentById(id, teamId);
 }
@@ -868,10 +908,12 @@ export async function regenerateKey(id: number, teamId: number): Promise<string 
 // Deletes an agent: its conversation threads, its API key row(s), then the bot user.
 // Deleting the user cascades to the ai_agent row (ON DELETE CASCADE on user_id), sets
 // assignee_user_id to NULL on every issue the agent was on, and nulls the actor on its
-// activity.
+// activity. The chat defaults naming it are cleared first, and the last-agent rows
+// read null through their own foreign key.
 export async function deleteAgent(id: number, teamId: number): Promise<boolean> {
   const agent = await getAgentById(id, teamId);
   if (!agent) return false;
+  await clearChatDefaults(teamId, id);
   await deleteThreadsWhere({ agentId: id });
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
   await deleteAccount(agent.userId);

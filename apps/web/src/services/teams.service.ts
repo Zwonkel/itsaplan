@@ -30,6 +30,8 @@ import {
   updateTeamMcp,
   getTeamProjectDefaults,
   updateTeamProjectDefaults,
+  getTeamChatDefault,
+  updateTeamChatDefault,
   createTeam,
   updateTeam,
   setTeamMemberRole,
@@ -154,6 +156,28 @@ export function useUpdateTeamProjectDefaults(teamId: number) {
   return useMutation({
     mutationFn: (defaultAgentIds: number[]) => updateTeamProjectDefaults(teamId, defaultAgentIds),
     onSuccess: (defaults) => qc.setQueryData(qk.teamProjectDefaults(teamId), defaults),
+  });
+}
+
+// The team's default chat agent, which every project that sets none of its own
+// inherits. A write moves every project's resolved value, so the project payloads
+// go stale at the prefix.
+export function useTeamChatDefaultQuery(teamId: number | null) {
+  return useQuery({
+    queryKey: qk.teamChatDefault(teamId ?? 0),
+    queryFn: () => getTeamChatDefault(teamId!),
+    enabled: teamId != null,
+  });
+}
+
+export function useUpdateTeamChatDefault(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (defaultAgentId: number | null) => updateTeamChatDefault(teamId, defaultAgentId),
+    onSuccess: (chatDefault) => {
+      qc.setQueryData(qk.teamChatDefault(teamId), chatDefault);
+      void qc.invalidateQueries({ queryKey: qk.anyChatSettings });
+    },
   });
 }
 

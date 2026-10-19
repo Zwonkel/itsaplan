@@ -25,6 +25,7 @@
   "addFavorite": "Ajouter aux favoris",
   "removeFavorite": "Retirer des favoris",
   "noModel": "Aucun modèle défini",
+  "defaultBadge": "Default",
   "copySession": "Copier l'identifiant de session",
   "sessionLabel": "Identifiant de session locale",
   "sessionHint": "La session que le runner de l'agent conserve sur sa propre machine. Reprenez-la depuis cette machine pour lire la transcription complète avec ses appels d'outils."

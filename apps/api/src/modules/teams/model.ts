@@ -212,3 +212,12 @@ export const TeamProjectDefaultsResponse = t.Object({
 export const updateTeamProjectDefaultsBody = t.Object({
   defaultAgentIds: t.Array(t.Integer({ minimum: 1 }), { uniqueItems: true }),
 });
+
+// The team's chat default, which every project without one of its own inherits.
+export const TeamChatDefaultResponse = t.Object({
+  defaultAgentId: t.Nullable(t.Number()),
+});
+
+export const updateTeamChatDefaultBody = t.Object({
+  defaultAgentId: t.Nullable(t.Integer({ minimum: 1 })),
+});

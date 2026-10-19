@@ -164,6 +164,10 @@ export interface TeamProjectDefaults {
   defaultAgentIds: number[];
 }
 
+export interface TeamChatDefault {
+  defaultAgentId: number | null;
+}
+
 // Parts of a source project the copy can carry over, one key per project settings
 // section. Passed to copyTeamProject as an include map; omitted keys are not
 // copied. The API force-enables dependencies (a view needs its
@@ -253,6 +257,16 @@ export const updateTeamProjectDefaults = (teamId: number, defaultAgentIds: numbe
   request<TeamProjectDefaults>(`/teams/${teamId}/project-defaults`, {
     method: 'PATCH',
     body: JSON.stringify({ defaultAgentIds }),
+  });
+
+// The team's default chat agent, which every project without one of its own inherits.
+export const getTeamChatDefault = (teamId: number) =>
+  request<TeamChatDefault>(`/teams/${teamId}/chat-default`);
+
+export const updateTeamChatDefault = (teamId: number, defaultAgentId: number | null) =>
+  request<TeamChatDefault>(`/teams/${teamId}/chat-default`, {
+    method: 'PATCH',
+    body: JSON.stringify({ defaultAgentId }),
   });
 
 // The projects a team owns: created, copied, and deleted by the team's own ranks

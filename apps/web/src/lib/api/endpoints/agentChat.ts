@@ -295,3 +295,30 @@ export const deleteAiAgentThread = (projectKey: string, agentId: number, threadI
     `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}`,
     { method: 'DELETE' },
   );
+
+// The chat defaults of a project and the member's remembered last-used agent, as the
+// chat panel and the project settings read them. `defaultAgentId` is the project's
+// own setting (null inherits the team default); `resolvedAgentId` is the agent a
+// fresh chat preselects for this member.
+export interface ProjectChatSettings {
+  defaultAgentId: number | null;
+  resolvedAgentId: number | null;
+  lastUsedAgentId: number | null;
+}
+
+export const getChatSettings = (projectKey: string) =>
+  request<ProjectChatSettings>(`/projects/${projectKey}/settings/chat`);
+
+export const updateChatSettings = (projectKey: string, defaultAgentId: number | null) =>
+  request<ProjectChatSettings>(`/projects/${projectKey}/settings/chat`, {
+    method: 'PATCH',
+    body: JSON.stringify({ defaultAgentId }),
+  });
+
+// The panel writes the member's last-used agent when a chat with one begins; a silent
+// preference write, so callers fire it and ignore failures.
+export const putLastUsedChatAgent = (projectKey: string, agentId: number) =>
+  request<void>(`/projects/${projectKey}/settings/chat/last-agent`, {
+    method: 'PUT',
+    body: JSON.stringify({ agentId }),
+  });

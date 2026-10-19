@@ -32,6 +32,7 @@ import {
   regenerateAiAgentKey,
   deleteAiAgent,
 } from '@/lib/api/endpoints/agents';
+import { getChatSettings, updateChatSettings } from '@/lib/api/endpoints/agentChat';
 import { qk } from '@/services/queryKeys';
 
 // Refetched on an interval because an external agent's runner presence comes from
@@ -280,5 +281,25 @@ export function useDeleteAiAgent(teamId: number | null) {
   return useMutation({
     mutationFn: (id: number) => deleteAiAgent(teamId!, id),
     onSuccess: invalidate,
+  });
+}
+
+// The chat defaults of one project: the project's own, the one it resolves to
+// (its own agent, else the team's, as far as it still serves chat) and the member's
+// last-used agent. The chat panel preselects from this; the project's settings page
+// edits the project's own value.
+export function useProjectChatSettings(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.chatSettings(projectKey ?? ''),
+    queryFn: () => getChatSettings(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
+export function useUpdateChatSettings(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (defaultAgentId: number | null) => updateChatSettings(projectKey, defaultAgentId),
+    onSuccess: (settings) => qc.setQueryData(qk.chatSettings(projectKey), settings),
   });
 }

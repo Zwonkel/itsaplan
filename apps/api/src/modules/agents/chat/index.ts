@@ -5,7 +5,7 @@ import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { noContent, sseFrame, sseResponse } from '#shared/http';
 import { HttpError } from '#shared/lib';
-import { commonErrors, errors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getAgentInProject, isTriggerableBy } from '../core/service';
 import { runnerAuth } from '../runner-auth';
 import {
@@ -13,6 +13,7 @@ import {
   ChatEventsResponse,
   ClaimChatResponse,
   SendChatResponse,
+  ChatSettingsResponse,
   projectAgentParams,
   chatEventsBody,
   chatEventsQuery,
@@ -20,6 +21,8 @@ import {
   chatResultBody,
   runnerMessageParams,
   sendChatBody,
+  updateChatSettingsBody,
+  updateLastChatAgentBody,
   type AgUiEventBody,
   type ChatMessageStatus,
 } from './model';
@@ -34,6 +37,7 @@ import {
   sendMessage,
   setThreadSession,
 } from './service';
+import { getChatSettings, setLastUsedChatAgent, setProjectChatDefault } from './chat-settings';
 
 // Chatting with an external agent: the member's side (send a message, follow the
 // answer) and the runner's side (take the next answer to produce, report AG-UI events,
@@ -90,6 +94,56 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
           "Queue a message for an external agent's runner and return the answer it will " +
           'produce. Follow the answer with the stream endpoint.',
       },
+    },
+  )
+
+  // The project's chat defaults, with the team's the project inherits and the
+  // member's last-used agent. Any member reads; only the project's owner or a
+  // manager of its team changes the default.
+  .get(
+    '/projects/:projectKey/settings/chat',
+    async ({ project, user }) => getChatSettings(project.id, project.teamId, requireUser(user).id),
+    {
+      projectMember: true,
+      response: { 200: ChatSettingsResponse, ...accessErrors },
+      detail: { summary: "Get a project's chat settings" },
+    },
+  )
+
+  .patch(
+    '/projects/:projectKey/settings/chat',
+    async ({ project, body, user }) => {
+      await setProjectChatDefault(project.id, project.teamId, body.defaultAgentId);
+      return getChatSettings(project.id, project.teamId, requireUser(user).id);
+    },
+    {
+      body: updateChatSettingsBody,
+      projectAdmin: true,
+      response: { 200: ChatSettingsResponse, ...commonErrors },
+      detail: {
+        summary: "Set a project's default chat agent",
+        description:
+          'Set the agent new chats in this project preselect. Null inherits the team ' +
+          "default. The agent must belong to the project's team, work in the project, be " +
+          'enabled for chat, and serve every member: a member-restricted agent cannot ' +
+          'be a default.',
+      },
+    },
+  )
+
+  // The agent the member last chatted with here, written by the chat panel: the next
+  // open of chat preselects it. The member's own preference, not a project setting.
+  .put(
+    '/projects/:projectKey/settings/chat/last-agent',
+    async ({ project, body, user }) => {
+      await setLastUsedChatAgent(project.id, project.teamId, requireUser(user).id, body.agentId);
+      return noContent();
+    },
+    {
+      body: updateLastChatAgentBody,
+      projectMember: true,
+      response: { 204: t.Void(), ...commonErrors },
+      detail: { summary: "Remember the member's last chat agent" },
     },
   )
 

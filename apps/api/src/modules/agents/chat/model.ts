@@ -190,3 +190,26 @@ export const ChatAckResponse = t.Object({
     description: 'The answer was stopped from the chat: kill the command and stop reporting.',
   }),
 });
+
+// The chat defaults of a project, as the chat panel and the project settings read them.
+export const ChatSettingsResponse = t.Object({
+  defaultAgentId: t.Nullable(t.Number(), {
+    description: "The project's own setting; null inherits the team's default.",
+  }),
+  resolvedAgentId: t.Nullable(t.Number(), {
+    description: "The project's, else the team's: the agent a fresh chat preselects.",
+  }),
+  lastUsedAgentId: t.Nullable(t.Number(), {
+    description: "The agent of the member's last chat in this project.",
+  }),
+});
+
+export const updateChatSettingsBody = t.Object({
+  defaultAgentId: t.Nullable(t.Integer({ minimum: 1 }), {
+    description: 'The agent new chats start with. Null inherits the team default.',
+  }),
+});
+
+export const updateLastChatAgentBody = t.Object({
+  agentId: t.Integer({ minimum: 1, description: 'The agent this member last chatted with.' }),
+});
