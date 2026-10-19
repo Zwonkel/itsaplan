@@ -27,6 +27,7 @@ import {
   WorkspaceManagerListResponse,
   WorkspaceResponse,
   addManagerBody,
+  createWorkspaceBody,
   scimGroupParams,
   searchQuery,
   updateWorkspaceBody,
@@ -35,6 +36,7 @@ import {
 } from './model';
 import {
   addAdmin,
+  createOwnWorkspace,
   deleteWorkspace,
   getWorkspace,
   listManagerCandidates,
@@ -45,11 +47,12 @@ import {
 } from './service';
 
 // A workspace owns teams. Only its owner and admins manage it; everyone else sees it
-// through the teams they are in. No route creates one: sign-up and sign-in make each
-// person's own (@repo/auth), and an edition that lets a person own more mounts its route
-// on createOwnWorkspace. SCIM of its own is there only where a build sets SCIM up per
-// workspace (setWorkspaceScim in @repo/auth): its owner sets it up, and the identity
-// provider decides who has access to the workspace. The instance's is set up in god mode.
+// through the teams they are in. Besides the workspace sign-up makes (@repo/auth),
+// POST /workspaces creates one on createOwnWorkspace, which refuses an agent's bot
+// user and a person the owned-workspace limit stops. SCIM of its own is there only
+// where a build sets SCIM up per workspace (setWorkspaceScim in @repo/auth): its owner
+// sets it up, and the identity provider decides who has access to the workspace. The
+// instance's is set up in god mode.
 export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: ['Workspaces'] } })
   .use(authContext)
   .use(guards)
@@ -61,6 +64,25 @@ export const workspaceRoutes = new Elysia({ name: 'workspaces', detail: { tags: 
       description: 'The workspaces you manage or hold a team in, with your standing in each.',
     },
   })
+
+  .post(
+    '/workspaces',
+    async ({ user, body, set }) => {
+      const workspaceId = await createOwnWorkspace(requireUser(user), body.name);
+      set.status = 201;
+      return getWorkspace(workspaceId, 'owner');
+    },
+    {
+      body: createWorkspaceBody,
+      response: { 201: WorkspaceResponse, ...errors(400, 401, 403, 409) },
+      detail: {
+        summary: 'Create a workspace',
+        description:
+          'Creates a workspace you own. No workspace for an agent bot user; the instance may cap ' +
+          'how many a person owns.',
+      },
+    },
+  )
 
   .get(
     '/workspaces/:workspaceId',

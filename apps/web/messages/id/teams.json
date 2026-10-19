@@ -568,8 +568,9 @@
   "workspace": {
     "rail": "Workspace",
     "create": "Workspace baru",
-    "createUnavailableTitle": "Lebih banyak workspace",
-    "createUnavailableHint": "Lebih banyak workspace per orang tersedia di Cloud dan Pro self-hosted.",
+    "createTitle": "Workspace baru",
+    "createSubmit": "Buat",
+    "created": "Workspace {name} berhasil dibuat",
     "general": "Umum",
     "roles": {
       "owner": "Pemilik",

@@ -1,3 +1,4 @@
+import './edition';
 import { app } from './app';
 import { startBackgroundJobs } from './background';
 

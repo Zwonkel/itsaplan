@@ -5,6 +5,10 @@ export const workspaceParams = t.Object({ workspaceId: t.Numeric() });
 
 export const workspaceManagerParams = t.Object({ workspaceId: t.Numeric(), userId: t.String() });
 
+export const createWorkspaceBody = t.Object({
+  name: t.String({ minLength: 1, maxLength: 60 }),
+});
+
 export const updateWorkspaceBody = t.Object({
   name: t.Optional(t.String({ minLength: 1, maxLength: 60 })),
   color: t.Optional(t.Nullable(t.String({ pattern: '^#[0-9a-fA-F]{6}$' }))),

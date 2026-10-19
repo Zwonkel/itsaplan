@@ -16,8 +16,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
   exports what a self-hosted instance runs. A cloud-only part is imported from there and
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
-  shown by `WorkspaceSectionNav`: here the core's sections as they are, while the hosted
-  build adds its own at any position or drops some. One it adds carries in `Component` the
+  shown by `WorkspaceSectionNav`: here the core's sections with SCIM provisioning added
+  last in the settings group, while the hosted build adds its own at any position or drops
+  some. One it adds carries in `Component` the
   page `/workspaces/:id/:sectionId` opens; that page answers 404 only once the workspace and
   every query in flight have loaded, so a section that waits on a query of its own opens
   from a direct link. Every section names its group: an `overview` one sits at the top of
@@ -26,16 +27,16 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   also decides the page a workspace opens on.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
-  `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
-  than one workspace per person is available. `ShellNotice` is a strip under the top bar of
+  `WorkspaceRailActions` sits below the workspace tiles of a rail; here it opens the dialog
+  that creates a workspace (WorkspaceCreateDialog). `ShellNotice` is a strip under the top bar of
   the app shell, god mode and the teams pages; here it shows nothing, while the hosted
   build shows notices about the instance there. `godSections(core)` returns the god mode
   sections: here the core's as they are, while the hosted build adds, replaces or drops
   some. One it adds carries in `Component` the page `/god/<slug>` opens, and may sit in a
   group of its own: the sidebar lists the groups in the order their first section comes,
   each named in `sections.godGroups`. The instance's
-  SCIM is set up in god mode; the hosted build that also sets it up per workspace adds
-  `WorkspaceScimSection` through `useWorkspaceSections`. `SignInExtras` sits among the sign-in methods, after the
+  SCIM is set up in god mode; the edition sets SCIM up per workspace too (the api turns it
+  on) — `useWorkspaceSections` adds `WorkspaceScimSection` to every workspace's menu. `SignInExtras` sits among the sign-in methods, after the
   instance's own provider; here it adds nothing, while the hosted build offers a sign-in
   through providers of its own. A sign-in that comes back with a code the core does not
   know shows the text the build's messages give it under `auth.errors.codes.<code>`.
@@ -47,8 +48,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   schedule. The schedule list names such a type by the message
   `settings.schedules.types.<id>`. `AgentAnalyticsExtras` renders below the panels of an
   agent dashboard, a team's or a workspace's, with the scope and the window it shows;
-  here a preview of the panels a build adds, which folds to its title and
-  description. `cloudMessages` is the
+  here it renders nothing.
+  `cloudMessages` is the
   hosted build's English, merged into the catalogue the keys are typed against (a god
   section's name and blurb go under `sections.god.<slug>` like the core ones), and
   `loadCloudMessages(locale)` returns its other languages. The i18n request config imports

@@ -568,8 +568,9 @@
   "workspace": {
     "rail": "Workspaces",
     "create": "Novo workspace",
-    "createUnavailableTitle": "Mais workspaces",
-    "createUnavailableHint": "Mais workspaces por pessoa estão disponíveis no Cloud e no Pro auto-hospedado.",
+    "createTitle": "Novo workspace",
+    "createSubmit": "Criar",
+    "created": "Workspace {name} criado",
     "general": "Geral",
     "roles": {
       "owner": "Proprietário",

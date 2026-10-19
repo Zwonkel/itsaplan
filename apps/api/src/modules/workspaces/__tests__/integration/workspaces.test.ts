@@ -4,7 +4,7 @@ import { setAuthSettings, setWorkspaceScim } from '@repo/auth';
 import { db, workspace } from '@repo/db';
 import { deleteAccount } from '#shared/account-deletion';
 import { setOwnedWorkspaceLimit } from '#shared/limits';
-import { apiKeyApi, app, authedApi, createProject } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, createProject } from '#tests/helpers/app';
 import { createAgent } from '#tests/helpers/agents';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -60,6 +60,50 @@ describe('workspaces', () => {
         { id: workspaceId, name: 'Root', role: null, color: null, canCreateTeam: false },
       ]);
       expect((await authedApi(outsider.cookie).workspaces.get()).data).toEqual([]);
+    });
+  });
+
+  describe('POST /workspaces', () => {
+    afterEach(() => setOwnedWorkspaceLimit());
+
+    it('creates another workspace the instance owner lists beside their own', async () => {
+      const { ownerApi, workspaceId } = await setup();
+      setOwnedWorkspaceLimit(0);
+
+      const res = await ownerApi.workspaces.post({ name: 'Fieldwork' });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ name: 'Fieldwork', role: 'owner', managerCount: 1 });
+      expect((await ownerApi.workspaces({ workspaceId: res.data!.id }).get()).data).toMatchObject({
+        role: 'owner',
+      });
+      expect((await ownerApi.workspaces.get()).data).toEqual([
+        { id: res.data!.id, name: 'Fieldwork', role: 'owner', color: null, canCreateTeam: true },
+        { id: workspaceId, name: 'Root', role: 'owner', color: null, canCreateTeam: true },
+      ]);
+    });
+
+    it('answers 409 when the person already owns the limit', async () => {
+      const { ownerApi } = await setup();
+
+      const res = await ownerApi.workspaces.post({ name: 'Second' });
+      expect(res.status).toBe(409);
+      expect(res.error?.value).toEqual({ error: 'You already own a workspace' });
+    });
+
+    it('lets another person with their personal workspace create one as well', async () => {
+      await setup();
+      setOwnedWorkspaceLimit(0);
+      const person = authedApi((await signUpTestUser({ team: false })).cookie);
+
+      expect((await person.workspaces.post({ name: 'Side project' })).status).toBe(201);
+      expect((await person.workspaces.get()).data!.map((w) => w.role)).toEqual(['owner', 'owner']);
+    });
+
+    it('refuses an empty name and one past 60 characters', async () => {
+      const { ownerApi } = await setup();
+
+      expect((await ownerApi.workspaces.post({ name: '' })).status).toBe(400);
+      expect((await ownerApi.workspaces.post({ name: 'a'.repeat(61) })).status).toBe(400);
     });
   });
 
@@ -309,8 +353,8 @@ describe('workspaces', () => {
       ]);
     });
 
-    it('makes none for an AI agent, and no route creates one', async () => {
-      const { owner, ownerApi } = await setup();
+    it('makes none for an AI agent, and the create route refuses it', async () => {
+      const { ownerApi } = await setup();
       await createProject(ownerApi, { key: 'MKT', name: 'Marketing' });
       const created = await createAgent(ownerApi, 'MKT', {
         name: 'Bot',
@@ -321,14 +365,7 @@ describe('workspaces', () => {
 
       const seen = (await bot.workspaces.get()).data!;
       expect(seen.filter((w) => w.role === 'owner')).toEqual([]);
-      const post = await app.handle(
-        new Request('http://localhost/workspaces', {
-          method: 'POST',
-          headers: { cookie: owner.cookie, 'content-type': 'application/json' },
-          body: JSON.stringify({ name: 'Second' }),
-        }),
-      );
-      expect(post.status).toBe(404);
+      expect((await bot.workspaces.post({ name: 'Second' })).status).toBe(403);
     });
 
     it('goes with a deleted account while it holds no project', async () => {

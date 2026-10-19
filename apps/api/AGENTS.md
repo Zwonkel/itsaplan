@@ -144,14 +144,15 @@ Enforced declaratively through macros, never imperative calls in handlers.
   default, also its admins, or anyone in one of its teams, as its owner sets
   `teamCreation`. `workspaceId` in the body names the workspace and is required. Anyone
   else gets 403.
-- **Every person owns one workspace.** No route creates one: sign-up makes it
+- **An account gets a workspace of its own**, its owner as the owner: sign-up makes it
   (`@repo/auth`), and `authContext` makes it on the next request for an account that has
   none (`ensurePersonalWorkspace`): the instance owner always, anyone else while
   `personalWorkspaces` is on in the auth settings. There is no shared workspace; every
   team is in the workspace of its owner.
-  A build that lets a person own more mounts its own route on `createOwnWorkspace` and
-  `workspaceCreation` (`workspaces/service.ts`, which refuse an agent's bot user) and
-  raises the number with `setOwnedWorkspaceLimit` (`shared/limits.ts`). When an account is deleted (`deleteAccount`), a workspace it
+  Beyond that, `POST /workspaces` (in `workspaces/index.ts`) creates a further one on
+  `createOwnWorkspace` (`workspaces/service.ts`, which refuses an agent's bot user and
+  checks the owned-workspace limit); `src/edition.ts` lifts the
+  cap with `setOwnedWorkspaceLimit(0)` at startup. When an account is deleted (`deleteAccount`), a workspace it
   owned goes with it while it holds no project and no AI agent; any other passes to the
   instance owner with what the account owned alone in it (`releaseOwnedWorkspaces` in
   `teams/service.ts`). God mode asks about sole-owned projects only outside the account's
@@ -159,9 +160,9 @@ Enforced declaratively through macros, never imperative calls in handlers.
   (`DELETE /workspaces/:id`, `workspaceDeletion` in `workspaces/service.ts`). No core
   route hands a workspace over; `transferWorkspace` is there for a build that offers it.
   SCIM provisioning creates and attaches accounts across the instance, so it is set up in
-  god mode (`/god/scim`); a hosted build also sets it up per workspace with
-  `setWorkspaceScim()` from `@repo/auth`, whose routes (`workspaceScim` guard) are each
-  workspace owner's (see SCIM below).
+  god mode (`/god/scim`); the edition turns workspace SCIM on (`setWorkspaceScim()` from
+  `@repo/auth` in `src/edition.ts`), and each workspace's owner then sets its own up,
+  whose routes (`workspaceScim` guard) are the workspace's (see SCIM below).
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project, so its

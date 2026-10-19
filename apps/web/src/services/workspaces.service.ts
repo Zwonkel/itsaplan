@@ -1,6 +1,9 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   addWorkspaceAdmin,
+  createWorkspace,
   createWorkspaceScimToken,
   deleteWorkspace,
   getWorkspace,
@@ -13,8 +16,9 @@ import {
   removeWorkspaceAdmin,
   setWorkspaceScimGroupMappings,
   updateWorkspace,
-  type WorkspacePatch,
   updateWorkspaceScim,
+  type NewWorkspaceInput,
+  type WorkspacePatch,
 } from '@/lib/api/endpoints/workspaces';
 import { qk } from '@/services/queryKeys';
 
@@ -26,6 +30,19 @@ export function useWorkspaceQuery(workspaceId: number) {
   return useQuery({
     queryKey: qk.workspace(workspaceId),
     queryFn: () => getWorkspace(workspaceId),
+  });
+}
+
+// The rail tiles read the list, so the create invalidates it for both rails.
+export function useCreateWorkspace() {
+  const t = useTranslations('teams.workspace');
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NewWorkspaceInput) => createWorkspace(input),
+    onSuccess: (workspace) => {
+      toast.success(t('created', { name: workspace.name }));
+      void qc.invalidateQueries({ queryKey: qk.workspaces });
+    },
   });
 }
 
